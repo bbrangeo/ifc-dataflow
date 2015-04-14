@@ -1,4 +1,4 @@
-importScripts( 'scheme.js', 'flood.js', 'csg.js', 'flood_csg.js'); 
+importScripts( 'scheme.js', 'flood.js', '../bim/bimserver.js', 'csg.js', 'flood_csg.js'); 
 
 // Routing
 var that = this;
@@ -43,6 +43,7 @@ update = function(m, silent){
 fail = function(m, silent){
 	if (silent) return;
 	m.success = false;
+	console.error(m)
 	postMessage(m);
 };
 

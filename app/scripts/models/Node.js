@@ -1,5 +1,28 @@
 var app = app || {};
 
+function MergeRecursive(obj1, obj2) {
+
+  for (var p in obj2) {
+    try {
+      // Property in destination object set; update its value.
+      if ( obj2[p].constructor==Object ) {
+        obj1[p] = MergeRecursive(obj1[p], obj2[p]);
+
+      } else {
+        obj1[p] = obj2[p];
+
+      }
+
+    } catch(e) {
+      // Property in destination object not set; create it and set its value.
+      obj1[p] = obj2[p];
+
+    }
+  }
+
+  return obj1;
+}
+
 define(['backbone', 'FLOOD'], function(Backbone, FLOOD) {
 
   return Backbone.Model.extend({
@@ -115,6 +138,12 @@ define(['backbone', 'FLOOD'], function(Backbone, FLOOD) {
     onEvalComplete: function(isNew, value, prettyValue){
 
       if (!isNew) return;
+
+      if (value.extra) {
+        var oldExtra = this.get('extra');
+        this.set('extra', MergeRecursive(oldExtra, value.extra));
+        value = value.value;
+      }
 
       this.set('lastValue', value);
       this.set('prettyLastValue', prettyValue);

@@ -29,6 +29,10 @@ require.config({
             deps: ['CSG'],
             exports: 'FLOODCSG'
         },
+        BIMSERVER: {
+            deps: ['FLOOD'],
+            exports: 'BIMSERVER'
+        },
         Viewport: {
             deps: [
                 'Three',
@@ -138,12 +142,15 @@ require.config({
         NumNodeView: 'views/NodeViews/Num',
         FormulaView: 'views/NodeViews/Formula',
         InputView: 'views/NodeViews/Input',
+        InputStringView: 'views/NodeViews/InputString',
+        SelectView: 'views/NodeViews/SelectView',
         OutputView: 'views/NodeViews/Output',
         CustomNodeView: 'views/NodeViews/CustomNode',
         ThreeCSGNodeView: 'views/NodeViews/ThreeCSG',
 
         OrbitControls: 'lib/OrbitControls',
         Viewport: 'lib/Viewport',
+        BIMSERVER: 'lib/bim/bimserver',
         FLOODCSG: 'lib/flood/flood_csg',
         FLOOD: 'lib/flood/flood',
         CSG: 'lib/flood/csg',

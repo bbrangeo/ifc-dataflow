@@ -1,0 +1,89 @@
+diff --git a/app/scripts/lib/flood/flood.js b/app/scripts/lib/flood/flood.js
+index ebcfcee..b9782f1 100755
+--- a/app/scripts/lib/flood/flood.js
++++ b/app/scripts/lib/flood/flood.js
+@@ -447,6 +447,7 @@ define('FLOOD',function() {
+ 			var args = Array.prototype.slice.call(arguments, 0);
+ 			var exp = [ this.lambda ].concat(args) ;
+ 
++			console.log("eval flood", exp)
+ 			return S.eval( exp );
+ 
+ 		};
+diff --git a/app/scripts/lib/flood/flood_runner.js b/app/scripts/lib/flood/flood_runner.js
+index 44cbaba..e466212 100644
+--- a/app/scripts/lib/flood/flood_runner.js
++++ b/app/scripts/lib/flood/flood_runner.js
+@@ -1,4 +1,4 @@
+-importScripts( 'scheme.js', 'flood.js', '../bim/bimserver.js', 'csg.js', 'flood_csg.js'); 
++importScripts( 'scheme.js', 'async.js', 'flood.js', '../bim/bimserver.js', 'csg.js', 'flood_csg.js'); 
+ 
+ // Routing
+ var that = this;
+@@ -105,18 +105,25 @@ on_run = function(data){
+ 
+ 	if (baseNode){
+ 	  baseNode.markDirty();
+-	  S.eval( baseNode.compile() );
+-	}	
+-
+-	var te = Date.now();
+-
+-	var msg = { kind: "run", workspace_id: workspace.id, elapsed: te - ts, expression: "" };
+-
+-	if (baseNode){
+-		msg.expression = baseNode.printExpression();
++	  console.log("eval flood_runner", baseNode.compile())
++	  S.eval_async( baseNode.compile(), undefined, function(res) {
++	  	console.log('callback!', arguments)
++	  	console.log(success)
++	  	success(res, data.silent);
++	  } );
++	}	else {
++		var te = Date.now();
++
++		var msg = { kind: "run", workspace_id: workspace.id, elapsed: te - ts, expression: "" };
++
++		if (baseNode){
++			msg.expression = baseNode.printExpression();
++		}
++
++		return success(msg, data.silent);
+ 	}
+ 
+-	return success(msg, data.silent);
++	
+ 
+ };
+ 
+diff --git a/app/scripts/lib/flood/scheme.js b/app/scripts/lib/flood/scheme.js
+index dce2b76..69fd305 100755
+--- a/app/scripts/lib/flood/scheme.js
++++ b/app/scripts/lib/flood/scheme.js
+@@ -14,7 +14,7 @@ if (typeof require != 'function' && typeof window != "object") {
+ 
+ }
+ 	
+-define('scheme',function() {
++define(function() {
+ 
+ 	// Env
+ 	// A dictionary of symbol-value pairs
+diff --git a/app/scripts/lib/flood/test/scheme_eval_async_test.js b/app/scripts/lib/flood/test/scheme_eval_async_test.js
+index 77ac055..b882d60 100644
+--- a/app/scripts/lib/flood/test/scheme_eval_async_test.js
++++ b/app/scripts/lib/flood/test/scheme_eval_async_test.js
+@@ -1,9 +1,10 @@
+ var assert = require('assert')
+-	, async = require('../async.js')
+-	, scheme = require('../scheme.js');
+-
++	, async = require('../async')
++	, scheme = require('../scheme');
+ 
+ (function(scheme) {
++	console.log("---")
++	console.log(scheme)
+ 
+ 	var S = new scheme.Interpreter();
+ 

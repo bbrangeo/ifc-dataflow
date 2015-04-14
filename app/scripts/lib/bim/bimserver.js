@@ -20,26 +20,33 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
         this.ifcSerializer = request(
             bimserver,
             "Bimsie1ServiceInterface",
-            "getSerializerByName",
-            { "serializerName": "Ifc2x3" }
+            "getSerializerByContentType",
+            { "contentType": "application/ifc" }
         );
         this.ifcDeserializer = request(
             bimserver,
             "Bimsie1ServiceInterface",
             "getDeserializerByName",
-            { "deserializerName": "IfcStepDeserializer" }
+            { "deserializerName": "Ifc2x3tc1 Step Deserializer" }
         );
+
+        this.csvSerializer = request(
+            bimserver,
+            "Bimsie1ServiceInterface",
+            "getSerializerByContentType",
+            {"contentType": "text/csvl"});
+
         this.bimQLQueryEngine = request(
             bimserver,
             "Bimsie1ServiceInterface",
             "getQueryEngineByName",
-            { "name": "BimQL Engine"}
+            { "name": "BimQL Engine Geometry"}
         );
         this.colladaSerializer = request(
             bimserver,
             "Bimsie1ServiceInterface",
-            "getSerializerByName",
-            { "serializerName": "Collada"}
+            "getSerializerByContentType",
+            { "contentType": "application/collada"}
         );
         
         var p = request(
@@ -56,7 +63,7 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
                 bimserver,
                 "Bimsie1ServiceInterface",
                 "addProject",
-                { "projectName": "Bimflow working project"}
+                { "projectName": "Bimflow working project", "schema": "ifc2x3tc1"}
             );            
         }
     };
@@ -71,7 +78,7 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
         this.bimserver = bimserver;
     }
 
-    function Model(oid, name, bimserver) {
+    function Model(oid, name, bimserver, colorMap) {
         this.oid = oid;
         this.name = name;
         this.bimserver = bimserver;
@@ -219,7 +226,9 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
                   "onlyTopLevel": "false",
                   "onlyActive": "false"
                 }
-            );
+            ).filter(function(p) {
+                return p.name !== 'Bimflow working project';
+            });
 
             // TODO: Maybe this doesnt reflect in the UI accurately 
             if (this.selectedIndex >= this.items.length) {
@@ -311,6 +320,8 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
             // TODO: upload result as revision in tmp project
             // TODO: pass on revision to the next node as Model
 
+            console.log("query on", model.name)
+
             var bimserver = model.bimserver;
             var queryResult = request(
                 bimserver,
@@ -332,6 +343,35 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
                 { "actionId": queryResult }
             );
 
+            // split csv file to obtain guids
+            // var guids = atob(downloadResult.file)
+            //     .split("\n")
+            //     .map(function(l) { return l.split(";"); })
+            //     .filter(function(l) { return l[2] === "GlobalId"; })
+            //     .map(function(l) { return l[3]; });
+
+            // console.log("number of guids", guids.length)
+
+            // var guids = ["2OrWItJ6zAwBNp0OUxK$CR"];
+
+            // var downloadGeometry = request(
+            //     bimserver,
+            //     "Bimsie1ServiceInterface",
+            //     "downloadByGuids",
+            //     {"roids": [model.oid],
+            //      "guids": guids,
+            //      "serializerOid": bimserver.ifcSerializer.oid,
+            //      "deep": "false",
+            //      "sync": "true"});
+
+            // var downloadGeometryResult = request(
+            //     bimserver,
+            //     "Bimsie1ServiceInterface",
+            //     "getDownloadData",
+            //     { "actionId": downloadGeometry }
+            // );
+
+
             var newRevision = request(
                 bimserver,
                 "Bimsie1ServiceInterface",
@@ -341,7 +381,7 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
                     "comment": "tmp query revision",
                     "deserializerOid": bimserver.ifcDeserializer.oid,
                     "fileSize": downloadResult.file.length,
-                    "fileName": "bar",
+                    "fileName": queryResult,
                     "data": downloadResult.file,
                     "sync": "true"
                 }
@@ -391,6 +431,52 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
 
         this.eval = function(model1, model2) {
             var bimserver = model1.bimserver;
+
+            // TODO: Test multiple bimservers
+            console.log("MERGING", [model1.oid, model1.bimserver], [model2.oid, model2.bimserver])
+            
+            if (model1.bimserver.url !== model2.bimserver.url) {
+                var download2 = request(
+                    model2.bimserver, 
+                    'Bimsie1ServiceInterface', 
+                    'downloadRevisions',
+                    {
+                        'roids': [model2.oid],
+                        'serializerOid': model2.bimserver.ifcSerializer.oid,
+                        'sync': 'true'
+                    }
+                );
+                var downloadResult2 = request(
+                    model2.bimserver, 
+                    'Bimsie1ServiceInterface', 
+                    'getDownloadData',
+                    { 'actionId': download2 }
+                );
+                var newRev2 = request(
+                    bimserver,
+                    "Bimsie1ServiceInterface",
+                    "checkin",
+                    { 
+                        "poid": bimserver.workProject.oid,
+                        "comment": "tmp query revision",
+                        "deserializerOid": bimserver.ifcDeserializer.oid,
+                        "fileSize": downloadResult2.file.length,
+                        "fileName": "bar",
+                        "data": downloadResult2.file,
+                        "sync": "true"
+                    }
+                );
+                var revisions2 = request(
+                    bimserver,
+                    "Bimsie1ServiceInterface",
+                    "getAllRevisionsOfProject",
+                    { 
+                        "poid": bimserver.workProject.oid
+                    }
+                );
+                model2 = revisions2[revisions2.length-1]
+            } 
+
             var download = request(
                 bimserver, 
                 'Bimsie1ServiceInterface', 
@@ -409,7 +495,7 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
                 { 'actionId': download }
             );
 
-             var newRevision = request(
+            var newRevision = request(
                 bimserver,
                 "Bimsie1ServiceInterface",
                 "checkin",
@@ -448,5 +534,167 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
         };
 
     }.inherits(FLOOD.baseTypes.NodeType);
+
+    FLOOD.nodeTypes.GetObjectInfo = function() {
+        FLOOD.baseTypes.NodeType.call(this, {
+            inputs: [ 
+                new FLOOD.baseTypes.InputPort("model", [Model]),
+            ],
+            outputs: [ new FLOOD.baseTypes.OutputPort("report", [Object])],
+            typeName: "GetObjectInfo" 
+        });
+
+        this.lastValue = "";
+
+        this.printExpression = function(){
+            return this.lastValue;
+        };
+
+        this.eval = function(model) {
+            var bimserver = model.bimserver;
+            
+            var objectInfoSerializer = request(
+                bimserver,
+                "Bimsie1ServiceInterface",
+                "getSerializerByName",
+                { "serializerName": "ObjectInfo" }
+            );
+
+            var download = request(
+                bimserver, 
+                'Bimsie1ServiceInterface', 
+                'downloadRevisions',
+                {
+                    'roids': [model.oid],
+                    'serializerOid': objectInfoSerializer.oid,
+                    'sync': 'true'
+                }
+            );
+
+            var downloadResult = request(
+                bimserver, 
+                'Bimsie1ServiceInterface', 
+                'getDownloadData',
+                { 'actionId': download }
+            );
+
+
+            
+
+            var reportHtml = atob(downloadResult.file);
+            var entNames = reportHtml.match(/<h1>(.*?)<\/h1>/g).map(function(name) {
+                return name.substring(4, name.length-5);
+            });
+
+            var counts = {};
+
+            entNames.forEach(function(n) { 
+                if (counts[n]) {
+                    counts[n] = counts[n] + 1
+                } else {
+                    counts[n] = 1
+                }
+            });
+
+            return counts
+        };
+
+        this.extend = function(args){            
+            this.selectedIndex = args.selectedIndex || 0;
+            this.items = args.items || [];
+        };
+
+    }.inherits(FLOOD.baseTypes.NodeType);
+
+    FLOOD.nodeTypes.mvdXML = function() {
+        FLOOD.baseTypes.NodeType.call(this, {
+            inputs: [ 
+                new FLOOD.baseTypes.InputPort("model", [Model]),
+                new FLOOD.baseTypes.InputPort("mvdxml", [String])
+            ],
+            outputs: [ new FLOOD.baseTypes.OutputPort("model", [Model])],
+            typeName: "mvdXML" 
+        });
+
+        this.eval = function(model, mvdxml) {
+            // get guids with issues from mvdxmlserver
+            var req = new XMLHttpRequest();
+            req.open('POST', 'http://localhost:3001', false);  // `false` makes the request synchronous
+            req.setRequestHeader('Content-type', "application/json");
+
+            var downloadId = request(
+                model.bimserver,
+                "Bimsie1ServiceInterface",
+                "download",
+                { 
+                  "roid": model.oid,
+                  "serializerOid": model.bimserver.ifcSerializer.oid,
+                  "showOwn": "false",
+                  "sync": "true"
+                }
+            );
+
+            var downloadResult = request(
+                model.bimserver,
+                "Bimsie1ServiceInterface",
+                "getDownloadData",
+                { "actionId": downloadId }
+            );
+
+            var body = {
+                mvdxml: mvdxml,
+                ifcdata: downloadResult.file
+            }
+
+            req.send(JSON.stringify(body));
+
+            if (req.status === 200)
+                guids = JSON.parse(req.responseText).response;
+            else
+                throw "request to mvdxmlserver failed ("+ req.status +"): "+ req.responseText;
+
+
+            var coloredGuids = {};
+            guids.forEach(function(guid) {
+                coloredGuids[guid] = "ff0000";
+            })
+
+            model.coloredGuids = coloredGuids;
+
+            return model;
+        }
+        
+
+
+    }.inherits(FLOOD.baseTypes.NodeType);
+
+
+    FLOOD.nodeTypes.checkIn = function() {
+        FLOOD.baseTypes.NodeType.call(this, {
+            inputs: [ 
+                new FLOOD.baseTypes.InputPort("project", [Project])
+            ],
+            outputs: [ new FLOOD.baseTypes.OutputPort("model", [Model])],
+            typeName: "checkIn" 
+        });
+
+        this.file = "";
+        this.model = null;
+
+        this.printExpression = function(){
+            return this.model;
+        };
+
+        this.eval = function(project) {
+            console.log(this.file, project)
+
+            // TODO: Create new model
+        };
+
+        this.extend = function(args){            
+            this.file = args.file || 0;
+            this.model = args.model || [];
+        };
+    }.inherits(FLOOD.baseTypes.NodeType);  
 
 });

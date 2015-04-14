@@ -6,6 +6,9 @@ require.config({
         underscore: {
             exports: '_'
         },
+        atob: {
+            exports: 'atob'
+        },
         backbone: {
             deps: [
                 'underscore',
@@ -149,6 +152,7 @@ require.config({
         CustomNodeView: 'views/NodeViews/CustomNode',
         ThreeCSGNodeView: 'views/NodeViews/ThreeCSG',
         ThreeModelView: 'views/NodeViews/ThreeModel',
+        Select3dView: 'views/NodeViews/Select3dView',
 
         OrbitControls: 'lib/OrbitControls',
         Viewport: 'lib/Viewport',
@@ -173,6 +177,7 @@ require.config({
         jquery: '../bower_components/jquery/jquery.min',
         backbone: '../bower_components/backbone-amd/backbone-min',
         underscore: '../bower_components/underscore-amd/underscore-min',
+        atob: '../bower_components/atob/atob'
     }
 
 });

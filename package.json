@@ -3,7 +3,7 @@
   "version": "0.0.4",
   "description": "A visual programming language for JavaScript, based on Scheme",
   "dependencies": {
-    
+    "atob": "^1.1.2"
   },
   "devDependencies": {
     "grunt-node-webkit-builder": "~0.1.13",
@@ -31,5 +31,4 @@
   "engines": {
     "node": ">=0.10.0"
   }
-
 }

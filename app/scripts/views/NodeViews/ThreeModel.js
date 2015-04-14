@@ -110,7 +110,7 @@ define(['backbone', 'underscore', 'jquery', 'BaseNodeView', 'ColladaLoader'], fu
       var lastValue = this.model.get('prettyLastValue');
       var temp;
 
-      if ( !lastValue ) return;
+      if ( !lastValue || typeof(lastValue) === "string") return;
 
       if (lastValue.extra) {
         lastValue = lastValue.value;
@@ -154,6 +154,10 @@ define(['backbone', 'underscore', 'jquery', 'BaseNodeView', 'ColladaLoader'], fu
         this.threeGeom = collada.scene;
         scene.add(this.threeGeom);
 
+        //collada.scene.scale.x = collada.scene.scale.y = collada.scene.scale.z = 0.002;
+        collada.scene.scale.x = collada.scene.scale.y = collada.scene.scale.z = 1;
+        collada.scene.updateMatrix();
+
         var ex = this.model.get('extra');
         this.threeGeom.position.x = ex.x || 0;
         this.threeGeom.position.y = ex.y || 0;
@@ -162,6 +166,22 @@ define(['backbone', 'underscore', 'jquery', 'BaseNodeView', 'ColladaLoader'], fu
 
         this.changeVisibility();
         this.colorSelected();
+
+        console.log(lastValue.coloredGuids)
+        if (lastValue.coloredGuids) {
+          this.threeGeom.traverse(function(ele) {
+            //var color = "0000ff";
+            //var meshMat = new THREE.MeshPhongMaterial({color: parseInt('0x' + color, 16) });
+            //ele.material = meshMat;
+            
+            if (lastValue.coloredGuids[ele.parent.name]) {
+            //if (!ele.name.length) {
+              var color = lastValue.coloredGuids[ele.parent.name]
+              var meshMat = new THREE.MeshPhongMaterial({color: parseInt('0x' + color, 16) });
+              ele.material = meshMat;
+            }          
+          });
+        }
       }.bind(this));
     }, 
 

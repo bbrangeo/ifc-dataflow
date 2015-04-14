@@ -1,5 +1,5 @@
-define(['BaseNodeView', 'WatchNodeView', 'NumNodeView', 'ThreeCSGNodeView', 'FormulaView', 'OutputView', 'InputView','CustomNodeView', 'InputStringView', 'SelectView', 'QueryView', 'ThreeModelView'], 
-  function(BaseNodeView, WatchNodeView, NumNodeView, ThreeCSGNodeView, FormulaView, OutputView, InputView, CustomNodeView, InputStringView, SelectView, QueryView, ThreeModelView){
+define(['BaseNodeView', 'WatchNodeView', 'NumNodeView', 'ThreeCSGNodeView', 'FormulaView', 'OutputView', 'InputView','CustomNodeView', 'InputStringView', 'SelectView', 'QueryView', 'ThreeModelView', 'Select3dView'], 
+  function(BaseNodeView, WatchNodeView, NumNodeView, ThreeCSGNodeView, FormulaView, OutputView, InputView, CustomNodeView, InputStringView, SelectView, QueryView, ThreeModelView, Select3dView){
 
   var nodeViewTypes = {};
 
@@ -12,10 +12,11 @@ define(['BaseNodeView', 'WatchNodeView', 'NumNodeView', 'ThreeCSGNodeView', 'For
   nodeViewTypes.GetProject = SelectView;
   nodeViewTypes.GetRevision = SelectView;
 
-  nodeViewTypes.GetRevision = ThreeModelView;
+  //nodeViewTypes.GetRevision = Select3dView;
   nodeViewTypes.Query = ThreeModelView;
   nodeViewTypes.MergeModels = ThreeModelView;
-
+  nodeViewTypes.mvdXML = ThreeModelView;
+  
   nodeViewTypes.CustomNode = CustomNodeView;
 
   nodeViewTypes.Script = FormulaView;

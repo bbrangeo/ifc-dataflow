@@ -1066,6 +1066,13 @@ THREE.ColladaLoader = function () {
 			}
 		}
 
+		// Hacks!
+		// this will only work with bimserver 1.2 exporter, which stores the guids as name on geometry
+
+		if (geometry && geometry.name.length === 22) {
+			node.name = geometry.name;
+		}
+
 		obj.name = node.name || node.id || "";
 		obj.id = node.id || "";
 		obj.layer = node.layer || "";
@@ -2477,6 +2484,7 @@ THREE.ColladaLoader = function () {
 	function Geometry() {
 
 		this.id = "";
+		this.name = '';
 		this.mesh = null;
 
 	};
@@ -2484,6 +2492,7 @@ THREE.ColladaLoader = function () {
 	Geometry.prototype.parse = function ( element ) {
 
 		this.id = element.getAttribute('id');
+		this.name = element.getAttribute('name');
 
 		extractDoubleSided( this, element );
 

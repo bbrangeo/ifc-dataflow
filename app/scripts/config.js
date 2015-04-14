@@ -144,9 +144,11 @@ require.config({
         InputView: 'views/NodeViews/Input',
         InputStringView: 'views/NodeViews/InputString',
         SelectView: 'views/NodeViews/SelectView',
+        QueryView: 'views/NodeViews/Query',
         OutputView: 'views/NodeViews/Output',
         CustomNodeView: 'views/NodeViews/CustomNode',
         ThreeCSGNodeView: 'views/NodeViews/ThreeCSG',
+        ThreeModelView: 'views/NodeViews/ThreeModel',
 
         OrbitControls: 'lib/OrbitControls',
         Viewport: 'lib/Viewport',
@@ -155,6 +157,8 @@ require.config({
         FLOOD: 'lib/flood/flood',
         CSG: 'lib/flood/csg',
         scheme: 'lib/flood/scheme',
+
+        ColladaLoader: 'lib/bim/ColladaLoader',
 
         // bower
         almond: '../bower_components/almond/almond',

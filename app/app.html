@@ -386,6 +386,24 @@
         </ul>
       </script>
 
+      <script type="text/template" id="node-query-template">
+        <ul class="node-inputs">
+          <% _.each(type.inputs, function(ele, index) { %> 
+            <li class="node-port node-port-input" data-index=" <%= index %> "> <span class="node-port-name"> <%= ele.name %> </span>  </li> 
+          <% }); %>
+        </ul>
+
+        <div class="node-data-container node-input-container">
+          <input type="text" class="text-input" placeholder="Input name" value="<%= type.value %>">
+        </div>
+
+        <ul class="node-outputs" >
+          <% _.each(type.outputs, function(ele, index) { %> 
+            <li class="node-port node-port-output" data-index=" <%= index %> "> <span class="node-port-name"> <%= ele.name %> </span> </li> 
+          <% }); %>
+        </ul>
+      </script>
+
       <script type="text/template" id="node-output-template">
 
         <ul class="node-inputs">

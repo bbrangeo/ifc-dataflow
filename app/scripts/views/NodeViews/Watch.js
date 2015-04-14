@@ -23,9 +23,9 @@ define(['backbone', 'underscore', 'jquery', 'BaseNodeView'], function(Backbone, 
 
     prettyPrint: function(key, val){
 
-    	if (typeof val === "number"){
-    		return val.toPrecision(4);
-    	}
+    	// if (typeof val === "number"){
+    	// 	return val.toPrecision(4);
+    	// }
 
     	if (typeof val === "string"){
     		return val.replace(new RegExp("\t", 'g'), "").replace(new RegExp("\n", 'g'), "<br>")

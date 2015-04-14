@@ -1,5 +1,5 @@
-define(['BaseNodeView', 'WatchNodeView', 'NumNodeView', 'ThreeCSGNodeView', 'FormulaView', 'OutputView', 'InputView','CustomNodeView', 'InputStringView', 'SelectView'], 
-  function(BaseNodeView, WatchNodeView, NumNodeView, ThreeCSGNodeView, FormulaView, OutputView, InputView, CustomNodeView, InputStringView, SelectView){
+define(['BaseNodeView', 'WatchNodeView', 'NumNodeView', 'ThreeCSGNodeView', 'FormulaView', 'OutputView', 'InputView','CustomNodeView', 'InputStringView', 'SelectView', 'QueryView', 'ThreeModelView'], 
+  function(BaseNodeView, WatchNodeView, NumNodeView, ThreeCSGNodeView, FormulaView, OutputView, InputView, CustomNodeView, InputStringView, SelectView, QueryView, ThreeModelView){
 
   var nodeViewTypes = {};
 
@@ -11,6 +11,9 @@ define(['BaseNodeView', 'WatchNodeView', 'NumNodeView', 'ThreeCSGNodeView', 'For
   nodeViewTypes.GetSerializer = SelectView;
   nodeViewTypes.GetProject = SelectView;
   nodeViewTypes.GetRevision = SelectView;
+
+  nodeViewTypes.GetRevision = ThreeModelView;
+  nodeViewTypes.Query = ThreeModelView;
 
   nodeViewTypes.CustomNode = CustomNodeView;
 

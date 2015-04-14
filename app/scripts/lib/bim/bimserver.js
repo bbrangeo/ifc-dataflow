@@ -14,8 +14,51 @@ if (typeof require != 'function' && typeof window != "object") {
 
 define('BIMSERVER', ['FLOOD'], function(FLOOD) {
     function Bimserver(url, token) {
+        var bimserver = {url: url, token: token};
         this.url = url;
         this.token = token;
+        this.ifcSerializer = request(
+            bimserver,
+            "Bimsie1ServiceInterface",
+            "getSerializerByName",
+            { "serializerName": "Ifc2x3" }
+        );
+        this.ifcDeserializer = request(
+            bimserver,
+            "Bimsie1ServiceInterface",
+            "getDeserializerByName",
+            { "deserializerName": "IfcStepDeserializer" }
+        );
+        this.bimQLQueryEngine = request(
+            bimserver,
+            "Bimsie1ServiceInterface",
+            "getQueryEngineByName",
+            { "name": "BimQL Engine"}
+        );
+        this.colladaSerializer = request(
+            bimserver,
+            "Bimsie1ServiceInterface",
+            "getSerializerByName",
+            { "serializerName": "Collada"}
+        );
+        
+        var p = request(
+            bimserver,
+            "Bimsie1ServiceInterface",
+            "getProjectsByName",
+            { "name": "Bimflow working project"}
+        );
+
+        if (p.length) {
+            this.workProject = p[0];
+        } else {
+            this.workProject = request(
+                bimserver,
+                "Bimsie1ServiceInterface",
+                "addProject",
+                { "projectName": "Bimflow working project"}
+            );            
+        }
     };
 
     function Serializer() {};
@@ -28,15 +71,15 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
         this.bimserver = bimserver;
     }
 
-    function Revision(oid, name, bimserver) {
+    function Model(oid, name, bimserver) {
         this.oid = oid;
         this.name = name;
         this.bimserver = bimserver;
     }
 
-    function BimserverRequest(url, interface, method, params, token) {
+    function request(bimserver, interface, method, params) {
         var request = new XMLHttpRequest();
-        request.open('POST', url + '/json', false);  // `false` makes the request synchronous
+        request.open('POST', bimserver.url + '/json', false);  // `false` makes the request synchronous
         
         var body = {
           "request": {
@@ -46,7 +89,7 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
           }
         }
 
-        if (token) body.token = token;
+        if (bimserver.token) body.token = bimserver.token;
 
         request.send(JSON.stringify(body));
 
@@ -100,8 +143,8 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
         FLOOD.baseTypes.NodeType.call(this, typeData );
 
         this.eval = function(email, password, url) {
-            var token = BimserverRequest(
-                url,
+            var token = request(
+                {url: url},
                 "Bimsie1AuthInterface",
                 "login",
                 { "username": email, "password": password })
@@ -128,12 +171,11 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
         };
 
         this.eval = function(bimserver) {
-            this.items = BimserverRequest(
-                bimserver.url,
+            this.items = request(
+                bimserver,
                 "PluginInterface",
                 "getAllSerializers",
-                { "onlyEnabled": "true"},
-                bimserver.token
+                { "onlyEnabled": "true"}
             );
 
             // TODO: Maybe this doesnt reflect in the UI accurately 
@@ -168,26 +210,15 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
             return this.selectedIndex;
         };
 
-        var createProject = function(project, bimserver) {
-            return new Project(
-                project.id, 
-                project.parentId, 
-                project.name, 
-                project.oid,
-                bimserver
-            )
-        };
-
         this.eval = function(bimserver) {
-            this.items = BimserverRequest(
-                bimserver.url,
+            this.items = request(
+                bimserver,
                 "Bimsie1ServiceInterface",
                 "getAllProjects",
                 {
                   "onlyTopLevel": "false",
                   "onlyActive": "false"
-                },
-                bimserver.token
+                }
             );
 
             // TODO: Maybe this doesnt reflect in the UI accurately 
@@ -198,7 +229,13 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
             var project = this.items[this.selectedIndex];
             return {
                 extra: { items: this.items },
-                value: createProject(project, bimserver)
+                value: new Project(
+                    project.id, 
+                    project.parentId, 
+                    project.name, 
+                    project.oid,
+                    bimserver
+                )
             };
         };
 
@@ -207,12 +244,12 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
             this.items = args.items || [];
         };
 
-    }.inherits(FLOOD.baseTypes.NodeType)
+    }.inherits(FLOOD.baseTypes.NodeType);
 
     FLOOD.nodeTypes.GetRevision = function() {
         FLOOD.baseTypes.NodeType.call(this, {
             inputs: [ new FLOOD.baseTypes.InputPort("project", [Project])],
-            outputs: [ new FLOOD.baseTypes.OutputPort("revision", [Revision])],
+            outputs: [ new FLOOD.baseTypes.OutputPort("model", [Model])],
             typeName: "GetRevision" 
         });
 
@@ -223,21 +260,12 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
             return this.selectedIndex;
         };
 
-        var createRev = function(rev, project) {
-            return new Revision(
-                rev.oid, 
-                rev.name, 
-                project.bimserver
-            )
-        };
-
         this.eval = function(project) {
-            this.items = BimserverRequest(
-                project.bimserver.url,
+            this.items = request(
+                project.bimserver,
                 "Bimsie1ServiceInterface",
                 "getAllRevisionsOfProject",
-                { "poid": project.oid },
-                project.bimserver.token
+                { "poid": project.oid }
             );
 
             // TODO: Maybe this doesnt reflect in the UI accurately 
@@ -245,10 +273,14 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
                 this.selectedIndex = 0;
             }
 
-            var revision = this.items[this.selectedIndex];
+            var rev = this.items[this.selectedIndex];
             return {
                 extra: { items: this.items },
-                value: createRev(this.items[this.selectedIndex], project)
+                value: new Model(
+                    rev.oid, 
+                    rev.comment, 
+                    project.bimserver
+                )
             };
         };
 
@@ -257,6 +289,86 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
             this.items = args.items || [];
         };
 
-    }.inherits(FLOOD.baseTypes.NodeType)
+    }.inherits(FLOOD.baseTypes.NodeType);
 
+    FLOOD.nodeTypes.Query = function() {
+        FLOOD.baseTypes.NodeType.call(this, {
+            inputs: [ 
+                new FLOOD.baseTypes.InputPort("model", [Model]),
+                new FLOOD.baseTypes.InputPort("query", [String])
+            ],
+            outputs: [ new FLOOD.baseTypes.OutputPort("model", [Model])]
+        });
+
+        this.lastValue = "";
+
+        this.printExpression = function(){
+            return this.lastValue;
+        };
+
+        this.eval = function(model, query) {
+            // TODO: download query
+            // TODO: upload result as revision in tmp project
+            // TODO: pass on revision to the next node as Model
+
+            var bimserver = model.bimserver;
+            var queryResult = request(
+                bimserver,
+                "Bimsie1ServiceInterface",
+                "downloadQuery",
+                { 
+                    "roid": model.oid,
+                    "qeid": bimserver.bimQLQueryEngine.oid,
+                    "code": query,
+                    "sync": "true",
+                    "serializerOid": bimserver.ifcSerializer.oid
+                }
+            );
+
+            var downloadResult = request(
+                bimserver,
+                "Bimsie1ServiceInterface",
+                "getDownloadData",
+                { "actionId": queryResult }
+            );
+
+            var newRevision = request(
+                bimserver,
+                "Bimsie1ServiceInterface",
+                "checkin",
+                { 
+                    "poid": bimserver.workProject.oid,
+                    "comment": "tmp query revision",
+                    "deserializerOid": bimserver.ifcDeserializer.oid,
+                    "fileSize": downloadResult.file.length,
+                    "fileName": "bar",
+                    "data": downloadResult.file,
+                    "sync": "true"
+                }
+            );
+
+            var revisions = request(
+                bimserver,
+                "Bimsie1ServiceInterface",
+                "getAllRevisionsOfProject",
+                { 
+                    "poid": bimserver.workProject.oid
+                }
+            );
+
+            var rev = revisions[revisions.length-1];
+
+            return new Model(
+                rev.oid, 
+                rev.comment, 
+                bimserver
+            )
+        };
+
+        this.extend = function(args){            
+            this.selectedIndex = args.selectedIndex || 0;
+            this.items = args.items || [];
+        };
+
+    }.inherits(FLOOD.baseTypes.NodeType);
 });

@@ -457,6 +457,52 @@
 
       </script>
 
+      <script type="text/template" id="node-model-template">
+        <ul class="node-inputs">
+          <% _.each(type.inputs, function(ele, index) { %> 
+            <li class="node-port node-port-input" data-index=" <%= index %> "> <span class="node-port-name"> <%= ele.name %> </span>  </li> 
+          <% }); %>
+        </ul>
+
+        <div class="node-data-container" >
+          <span class="name searchfield"><%= typeName != "CustomNode" ? typeName : type.functionName  %></span>
+        </div>
+
+        <ul class="node-outputs" >
+          <% _.each(type.outputs, function(ele, index) { %> 
+            <li class="node-port node-port-output" data-index=" <%= index %> "> <span class="node-port-name"> <%= ele.name %> </span> </li> 
+          <% }); %>
+        </ul>
+
+        <div class="dropdown keep-open node-settings" style="position:absolute">
+
+          <a data-toggle="dropdown" href="#">
+            <span style="color:black; padding: 1px">...</span>
+          </a>
+
+          <ul class="dropdown-menu node-dropdown-menu" role="menu" aria-labelledby="dLabel">
+
+            <li class="dropdown-header" style="font-size: 10px; padding: 0" >Visibility</li>
+
+            <li class="toggle-vis node-dropown-menu-item">
+              <i class="icon-eye-open"></i><span style="padding-left: 5px">Hide geometry</span>
+            </li>
+
+            <li class="dropdown-header">Transform</li>
+
+            <span class="dropdown-header">X</span>
+              <input type="number" class="num-x" value=0>
+
+              <span class="dropdown-header">Y</span>
+              <input type="number" class="num-y" value=0>
+
+              <span class="dropdown-header">Z</span>
+              <input type="number" class="num-z" value=0>
+          </ul>
+        </div>
+
+      </script>
+
       <script type="text/template" id="workspace-tab-template">
 
         <i class="icon-pencil dim-button edit-button" style="visibility: hidden; margin-left: 10px"></i>

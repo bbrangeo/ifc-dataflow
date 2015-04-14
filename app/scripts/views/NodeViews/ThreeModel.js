@@ -21,16 +21,25 @@ define(['backbone', 'underscore', 'jquery', 'BaseNodeView', 'ColladaLoader'], fu
   }
 
   return BaseNodeView.extend({
-
+    template: _.template($("#node-model-template").html()),
     initialize: function(args) {
 
       BaseNodeView.prototype.initialize.apply(this, arguments);
+      this.rendered = false;
 
       this.model.on('change:selected', this.colorSelected, this);
       this.model.on('change:visible', this.changeVisibility, this);
       this.model.on('remove', this.onRemove, this);
       this.model.on('change:prettyLastValue', this.onEvalComplete, this );
       this.model.workspace.on('change:current', this.changeVisibility, this);
+
+      this.model.on('change:extra', function() { 
+        var ex = this.model.get('extra') ;
+        this.threeGeom.position.x = ex.x;
+        this.threeGeom.position.y = ex.y;
+        this.threeGeom.position.z = ex.z;
+        this.threeGeom.updateMatrix();
+      }, this);
 
       this.onEvalComplete();
 
@@ -39,7 +48,6 @@ define(['backbone', 'underscore', 'jquery', 'BaseNodeView', 'ColladaLoader'], fu
     colorSelected: function(){
 
       BaseNodeView.prototype.colorSelected.apply(this, arguments);
-
 
       if ( !( this.threeGeom && this.model.get('visible')) ) return this;
 
@@ -145,6 +153,13 @@ define(['backbone', 'underscore', 'jquery', 'BaseNodeView', 'ColladaLoader'], fu
 
         this.threeGeom = collada.scene;
         scene.add(this.threeGeom);
+
+        var ex = this.model.get('extra');
+        this.threeGeom.position.x = ex.x || 0;
+        this.threeGeom.position.y = ex.y || 0;
+        this.threeGeom.position.z = ex.z || 0;
+        this.threeGeom.updateMatrix();
+
         this.changeVisibility();
         this.colorSelected();
       }.bind(this));
@@ -185,6 +200,49 @@ define(['backbone', 'underscore', 'jquery', 'BaseNodeView', 'ColladaLoader'], fu
         icon.addClass('icon-eye-close');
         label.html('Show geometry');
       }
+
+
+      var that = this;
+      $('.dropdown.keep-open').on({
+        "shown.bs.dropdown": function() {
+          that.selectable = false;
+          that.model.set('selected', false);
+          $(this).data('closable', false);
+        },
+        "mouseleave": function() {
+          $(this).data('closable', true);
+        },
+        "click": function() {
+          $(this).data('closable', false);
+        },
+        "hide.bs.dropdown": function() {
+          if ( $(this).data('closable') ) that.selectable = true;
+          return $(this).data('closable');
+        }
+      });
+
+      var extra = this.model.get('extra');
+      ['x', 'y', 'z'].map(function(dir) {
+        this[dir +'Input'] = this.$el.find('.num-' + dir);
+        var input = this[dir +'Input'];
+        input.val(extra[dir] != undefined ? extra[dir] : 0);
+        input.change( function(e){ 
+          console.log('input change', dir, input.val())
+          e.stopPropagation(); 
+          var val = parseFloat( input.val() );
+          if (isNaN(val)) return;
+          console.log("silent", this.silent)
+          if ( this.silent ) return;
+          
+          var newValue = new Object();
+          newValue[dir] = val;
+          this.model.workspace.setNodeProperty({
+            property: 'extra', 
+            _id: this.model.get('_id'), 
+            newValue: _.extend(_.extend({}, this.model.get('extra')), newValue)
+          });      
+        }.bind(this));
+      }.bind(this));
 
       return this;
 

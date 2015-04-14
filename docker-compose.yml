@@ -1,0 +1,14 @@
+flood:
+  build: .
+  command: node server/app.js
+  links:
+  - mongodb
+  environment:
+  - MONGODB=$MONGODB_PORT/test
+  ports:
+  - "3000"
+
+mongodb:
+  image: mongo
+  environment:
+  - AUTH=no

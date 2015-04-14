@@ -1,0 +1,6 @@
+dist_desktop
+node_modules
+dist
+bower_components
+app/bower_components
+.git

@@ -9,14 +9,10 @@ define(['backbone', 'underscore', 'jquery', 'BaseNodeView', 'jqueryuislider'], f
       BaseNodeView.prototype.initialize.apply(this, arguments);
 
       this.model.on('change:extra', function() { 
-        
         var ex = this.model.get('extra') ;
-        console.log("changed", ex)
         this.silentSyncUI( ex );
-
         this.model.trigger('updateRunner'); 
         this.model.workspace.trigger('requestRun');
-        
       }, this);
 
     },
@@ -39,28 +35,23 @@ define(['backbone', 'underscore', 'jquery', 'BaseNodeView', 'jqueryuislider'], f
     silentSyncUI: function(data){
       this.silent = true;
       this.$el.find('.select-input').val( data.selectedIndex );
-      console.log(data)
       this.silent = false;
     },
 
     valChanged: function() {
-      console.log("change handler")
-        this.inputSet();
-        this.model.trigger('updateRunner');
-        //this.model.workspace.trigger('requestRun');
+      this.inputSet();
+      this.model.trigger('updateRunner');
+      //this.model.workspace.trigger('requestRun');
     },
 
     inputSet: function(e, ui) {
-        if (this.silent) return;
-        console.log("CALLED SET WHOO")
-        var newValue = { 
-          selectedIndex: parseInt(this.$el.find('.select-input').val(), 10),
-
-        };
-        this.model.workspace.setNodeProperty({property: 'extra', _id: this.model.get('_id'), newValue: newValue });           
+      if (this.silent) return;
+      
+      var newValue = { 
+        selectedIndex: parseInt(this.$el.find('.select-input').val(), 10),
+      };
+      this.model.workspace.setNodeProperty({property: 'extra', _id: this.model.get('_id'), newValue: newValue });           
     }
-
-
   });
 
 });

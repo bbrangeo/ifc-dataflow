@@ -20,6 +20,20 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
 
     function Serializer() {};
 
+    function Project(id, parentId, name, oid, bimserver) {
+        this.id = id;
+        this.parentId = parentId;
+        this.name = name;
+        this.oid = oid;
+        this.bimserver = bimserver;
+    }
+
+    function Revision(oid, name, bimserver) {
+        this.oid = oid;
+        this.name = name;
+        this.bimserver = bimserver;
+    }
+
     function BimserverRequest(url, interface, method, params, token) {
         var request = new XMLHttpRequest();
         request.open('POST', url + '/json', false);  // `false` makes the request synchronous
@@ -108,67 +122,141 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
 
         this.selectedIndex = 0;
         this.items = [];
+        
+        this.printExpression = function(){
+            return this.selectedIndex;
+        };
+
+        this.eval = function(bimserver) {
+            this.items = BimserverRequest(
+                bimserver.url,
+                "PluginInterface",
+                "getAllSerializers",
+                { "onlyEnabled": "true"},
+                bimserver.token
+            );
+
+            // TODO: Maybe this doesnt reflect in the UI accurately 
+            if (this.selectedIndex >= this.items.length) {
+                this.selectedIndex = 0;
+            }
+            
+            return {
+                extra: { items: this.items },
+                value: this.items[this.selectedIndex]
+            };
+        };
+
+        this.extend = function(args){            
+            this.selectedIndex = args.selectedIndex || 0;
+            this.items = args.items || [];
+        };
+
+    }.inherits( FLOOD.baseTypes.NodeType);
+
+    FLOOD.nodeTypes.GetProject = function() {
+        FLOOD.baseTypes.NodeType.call(this, {
+            inputs: [ new FLOOD.baseTypes.InputPort("bimserver", [Bimserver])],
+            outputs: [ new FLOOD.baseTypes.OutputPort("project", [Project])],
+            typeName: "GetProject" 
+        });
+
+        this.selectedIndex = 0;
+        this.items = [];
 
         this.printExpression = function(){
             return this.selectedIndex;
         };
 
-        this._compile = this.compile;
-
-        this.compile = function() {
-            console.log("compile called");
-            //this.markClean();
-            var x = this._compile.call(this);
-
-            console.log(x);
-            return x;
-
-            //console.log(x);
-            //return x;
-            
-            // bijna goed, rendering reset met de verkeerde waarde, 
-            // waardoor de change handler niet goed vuurt
-            // this.markDirty();
-            // this.markClean();
-        }
-
-        this.eval = function(bimserver) {
-            if (this.items.length > 0) {
-                return this.items[this.selectedIndex];
-            } else {
-                console.log("eval called")
-                console.log(this.selectedIndex)
-                var serializers = BimserverRequest(
-                    bimserver.url,
-                    "PluginInterface",
-                    "getAllSerializers",
-                    { "onlyEnabled": "true"},
-                    bimserver.token);
-                this.items = serializers;
-                return {
-                    extra: {
-                        items: this.items
-                    },
-                    value: serializers[this.selectedIndex]
-                }
-            }
-            
+        var createProject = function(project, bimserver) {
+            return new Project(
+                project.id, 
+                project.parentId, 
+                project.name, 
+                project.oid,
+                bimserver
+            )
         };
 
-        this.extend = function(args){
-            if (args.selectedIndex != undefined && typeof args.selectedIndex === "number"){
-                this.selectedIndex = args.selectedIndex;
-            } else {
+        this.eval = function(bimserver) {
+            this.items = BimserverRequest(
+                bimserver.url,
+                "Bimsie1ServiceInterface",
+                "getAllProjects",
+                {
+                  "onlyTopLevel": "false",
+                  "onlyActive": "false"
+                },
+                bimserver.token
+            );
+
+            // TODO: Maybe this doesnt reflect in the UI accurately 
+            if (this.selectedIndex >= this.items.length) {
                 this.selectedIndex = 0;
             }
 
-            if (args.items != undefined && typeof args.items.length === "number"){
-                this.items = args.items;
-            } else {
-                this.items = [];
-            }
-        }
+            var project = this.items[this.selectedIndex];
+            return {
+                extra: { items: this.items },
+                value: createProject(project, bimserver)
+            };
+        };
 
-    }.inherits( FLOOD.baseTypes.NodeType);
+        this.extend = function(args){            
+            this.selectedIndex = args.selectedIndex || 0;
+            this.items = args.items || [];
+        };
+
+    }.inherits(FLOOD.baseTypes.NodeType)
+
+    FLOOD.nodeTypes.GetRevision = function() {
+        FLOOD.baseTypes.NodeType.call(this, {
+            inputs: [ new FLOOD.baseTypes.InputPort("project", [Project])],
+            outputs: [ new FLOOD.baseTypes.OutputPort("revision", [Revision])],
+            typeName: "GetRevision" 
+        });
+
+        this.selectedIndex = 0;
+        this.items = [];
+ 
+        this.printExpression = function(){
+            return this.selectedIndex;
+        };
+
+        var createRev = function(rev, project) {
+            return new Revision(
+                rev.oid, 
+                rev.name, 
+                project.bimserver
+            )
+        };
+
+        this.eval = function(project) {
+            this.items = BimserverRequest(
+                project.bimserver.url,
+                "Bimsie1ServiceInterface",
+                "getAllRevisionsOfProject",
+                { "poid": project.oid },
+                project.bimserver.token
+            );
+
+            // TODO: Maybe this doesnt reflect in the UI accurately 
+            if (this.selectedIndex >= this.items.length) {
+                this.selectedIndex = 0;
+            }
+
+            var revision = this.items[this.selectedIndex];
+            return {
+                extra: { items: this.items },
+                value: createRev(this.items[this.selectedIndex], project)
+            };
+        };
+
+        this.extend = function(args){            
+            this.selectedIndex = args.selectedIndex || 0;
+            this.items = args.items || [];
+        };
+
+    }.inherits(FLOOD.baseTypes.NodeType)
 
 });

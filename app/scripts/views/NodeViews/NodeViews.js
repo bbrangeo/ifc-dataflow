@@ -6,8 +6,12 @@ define(['BaseNodeView', 'WatchNodeView', 'NumNodeView', 'ThreeCSGNodeView', 'For
   nodeViewTypes.Base = ThreeCSGNodeView;
   nodeViewTypes.Show = WatchNodeView;
   nodeViewTypes.Number = NumNodeView;
+  
   nodeViewTypes.InputString = InputStringView;
   nodeViewTypes.GetSerializer = SelectView;
+  nodeViewTypes.GetProject = SelectView;
+  nodeViewTypes.GetRevision = SelectView;
+
   nodeViewTypes.CustomNode = CustomNodeView;
 
   nodeViewTypes.Script = FormulaView;

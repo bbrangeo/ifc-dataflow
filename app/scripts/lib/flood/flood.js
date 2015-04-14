@@ -1688,6 +1688,10 @@ define('FLOOD',function() {
 	  options = options || {};
 
 	  // check if args matches types expected for node inputs - if so, execute
+	  args = args.map(function(arg) {
+	  	return arg.extra ? arg.value : arg;
+	  });
+
 	  if ( doAllTypesMatch( args, options.expected_arg_types ) ){
 	  	return this.apply(this_arg, args);
 	  } 

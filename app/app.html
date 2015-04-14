@@ -425,7 +425,7 @@
           <select class='select-input'>
             <% _.each(extra.items, function(item, index) { %>
               <option value="<%= index %>" <%= index === extra.selectedIndex ? "selected" : "" %>>
-                <%= item.name %>
+                <%= item.name || item.comment %>
               </option>
             <% }); %>
           </select>

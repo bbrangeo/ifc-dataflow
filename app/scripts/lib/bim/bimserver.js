@@ -371,4 +371,82 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
         };
 
     }.inherits(FLOOD.baseTypes.NodeType);
+
+
+    FLOOD.nodeTypes.MergeModels = function() {
+        FLOOD.baseTypes.NodeType.call(this, {
+            inputs: [ 
+                new FLOOD.baseTypes.InputPort("model1", [Model]),
+                new FLOOD.baseTypes.InputPort("model2", [Model])
+            ],
+            outputs: [ new FLOOD.baseTypes.OutputPort("model", [Model])],
+            typeName: "MergeModels" 
+        });
+
+        this.lastValue = "";
+
+        this.printExpression = function(){
+            return this.lastValue;
+        };
+
+        this.eval = function(model1, model2) {
+            var bimserver = model1.bimserver;
+            var download = request(
+                bimserver, 
+                'Bimsie1ServiceInterface', 
+                'downloadRevisions',
+                {
+                    'roids': [model1.oid, model2.oid],
+                    'serializerOid': bimserver.ifcSerializer.oid,
+                    'sync': 'true'
+                }
+            );
+
+            var downloadResult = request(
+                bimserver, 
+                'Bimsie1ServiceInterface', 
+                'getDownloadData',
+                { 'actionId': download }
+            );
+
+             var newRevision = request(
+                bimserver,
+                "Bimsie1ServiceInterface",
+                "checkin",
+                { 
+                    "poid": bimserver.workProject.oid,
+                    "comment": "tmp query revision",
+                    "deserializerOid": bimserver.ifcDeserializer.oid,
+                    "fileSize": downloadResult.file.length,
+                    "fileName": "bar",
+                    "data": downloadResult.file,
+                    "sync": "true"
+                }
+            );
+
+            var revisions = request(
+                bimserver,
+                "Bimsie1ServiceInterface",
+                "getAllRevisionsOfProject",
+                { 
+                    "poid": bimserver.workProject.oid
+                }
+            );
+
+            var rev = revisions[revisions.length-1];
+
+            return new Model(
+                rev.oid,
+                rev.comment,
+                bimserver
+                )
+        };
+
+        this.extend = function(args){            
+            this.selectedIndex = args.selectedIndex || 0;
+            this.items = args.items || [];
+        };
+
+    }.inherits(FLOOD.baseTypes.NodeType);
+
 });

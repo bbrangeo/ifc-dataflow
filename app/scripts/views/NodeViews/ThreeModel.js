@@ -146,6 +146,7 @@ define(['backbone', 'underscore', 'jquery', 'BaseNodeView', 'ColladaLoader'], fu
         this.threeGeom = collada.scene;
         scene.add(this.threeGeom);
         this.changeVisibility();
+        this.colorSelected();
       }.bind(this));
     }, 
 

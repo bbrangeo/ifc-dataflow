@@ -14,6 +14,7 @@ define(['BaseNodeView', 'WatchNodeView', 'NumNodeView', 'ThreeCSGNodeView', 'For
 
   nodeViewTypes.GetRevision = ThreeModelView;
   nodeViewTypes.Query = ThreeModelView;
+  nodeViewTypes.MergeModels = ThreeModelView;
 
   nodeViewTypes.CustomNode = CustomNodeView;
 

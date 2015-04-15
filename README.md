@@ -16,7 +16,7 @@ Potentially you'll have run docker-compose up a couple of times until it works, 
 ###Optional requirements:
 
 - Running BIMserver 1.4.0 with updated BimQL Engine plugin to use any BIMserver related functionality
-- Running mvdXMLServer on port 3001 to use the mvdXML component.
+- Running mvdXMLServer (https://github.com/bimio/mvdxmlserver) on port 3001 to use the mvdXML component.
 
 ###Updating BimQL Engine plugin:
 
@@ -32,7 +32,6 @@ When using the 1.4.0 version of the BIMserver the default BimQL plugin does not 
 - Errors during start of the docker container. Likely because of the mongodb / flood starting order. Only occurs when using docker.
 - Execute graph asynchronously 
 - Dockerize BIMserver. Current blocker for this is the IFP2 multicast networking error when trying to start the bimserver, something to do with docker networking not supporting multicast, and this is required by web sockets.
-- Update mvdXMLChecker java project to work without a running bimserver, or with configurable bimserver. Current blocker is the fact that the project is built against 1.3 bimserver code.
 
 Below follows the original flood readme file.
 

@@ -1,5 +1,40 @@
-![Image](https://raw.github.com/pboyer/flood/master/extra/screenshot.png) 
+![Image](https://raw.github.com/bimio/ifc-dataflow/bim-master/example.png) 
 
+##IFC-Dataflow
+
+This is a fork from the brilliant [flood](http://github/pboyer/flood) project. It adds BIM related functionality, turning it into the IFC Dataflow framework.
+
+###Installation
+
+The repository contains a Dockerfile and a docker-compose.yml file that sets up mongodb and installs and deploys the application. Execute the following commands from the root directory:
+
+	docker-compose build
+	docker-compose up
+
+Potentially you'll have run docker-compose up a couple of times until it works, this is due to a strange race condition during the start phase between flood and mongodb.
+
+###Optional requirements:
+
+- Running BIMserver 1.4.0 with updated BimQL Engine plugin to use any BIMserver related functionality
+- Running mvdXMLServer on port 3001 to use the mvdXML component.
+
+###Updating BimQL Engine plugin:
+
+When using the 1.4.0 version of the BIMserver the default BimQL plugin does not return any geometry. The BimQL repository has been patched for this, so you'll need to perform the following steps to be able to use the query component with a 3d preview:
+
+- Checkout the BimQL project (https://github.com/opensourceBIM/bimql)
+- Compile and export jar file
+- Put the resulting bimql jar in the plugins folder of your bimserver
+- Delete BIMserver database, this is sometimes needed before it picks up the new query engine correctly
+
+###Open issues:
+
+- Errors during start of the docker container. Likely because of the mongodb / flood starting order. Only occurs when using docker.
+- Execute graph asynchronously 
+- Dockerize BIMserver. Current blocker for this is the IFP2 multicast networking error when trying to start the bimserver, something to do with docker networking not supporting multicast, and this is required by web sockets.
+- Update mvdXMLChecker java project to work without a running bimserver, or with configurable bimserver. Current blocker is the fact that the project is built against 1.3 bimserver code.
+
+Below follows the original flood readme file.
 
 ##flood
 

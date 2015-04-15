@@ -40,7 +40,7 @@ define('BIMSERVER', ['FLOOD'], function(FLOOD) {
             bimserver,
             "Bimsie1ServiceInterface",
             "getQueryEngineByName",
-            { "name": "BimQL Engine Geometry"}
+            { "name": "BimQL Engine"}
         );
         this.colladaSerializer = request(
             bimserver,
